@@ -160,6 +160,7 @@ function renderNode (node, above) {
         return renderNode(element, above.concat(identifier))
       }).join('')}
       ${renderTags()}
+      ${renderRecitalLinks()}
     </section>
     `
   } else if (type === 'section') {
@@ -172,6 +173,7 @@ function renderNode (node, above) {
         return renderNode(element, above.concat(identifier))
       }).join('')}
       ${renderTags()}
+      ${renderRecitalLinks()}
     </section>
     `
   } else if (type === 'paragraph' || type === 'subparagraph') {
@@ -188,6 +190,7 @@ function renderNode (node, above) {
           : above
       ) +
       renderTags() +
+      renderRecitalLinks() +
       '</section>'
     )
   } else if (type === 'article') {
@@ -199,6 +202,7 @@ function renderNode (node, above) {
         return renderNode(element, above.concat(id))
       }).join('')}
       ${renderTags()}
+      ${renderRecitalLinks()}
     </section>
     `
   } else if (type === 'preamble') {
@@ -210,6 +214,7 @@ function renderNode (node, above) {
       <li class=point id=${id}>
         <p>${renderText(node.text)}</p>
         ${renderTags()}
+        ${renderRecitalLinks()}
       </li>
     `
   }
@@ -222,6 +227,20 @@ function renderNode (node, above) {
           return `
           <li>
           ${WHITE_FLAG} <a href="#tag:${termToID(tag)}">${escape(tag)}</a>
+          </li>
+          `
+        }).join('')}
+      </ul>
+    `
+  }
+  function renderRecitalLinks () {
+    if (!Array.isArray(node.recitals)) return ''
+    return `
+      <ul class=recitalLinks>
+        ${node.recitals.sort().map(function (recital) {
+          return `
+          <li>
+            <a href="#recital-${recital}">Recital ${recital}</a>
           </li>
           `
         }).join('')}

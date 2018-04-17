@@ -848,6 +848,8 @@ text:
                   -  is subject to specific obligations under this Regulation;
 
           - type: paragraph
+            recitals:
+              - 80
             text:
               - definition: representative
               -  means a natural or legal person established in the Union who, designated by the 
@@ -3689,6 +3691,8 @@ text:
             title: Representatives of controllers or processors not established in the Union
             tags:
               - representatives
+            recitals:
+              - 80
             text:
               - type: paragraph
                 text:
