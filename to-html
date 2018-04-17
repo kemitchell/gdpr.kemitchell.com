@@ -1,0 +1,472 @@
+#!/usr/bin/env node
+var deepEqual = require('deep-equal')
+var escape = require('escape-html')
+var gdpr = require('./gdpr')
+var romanize = require('romanize')
+
+var WHITE_FLAG = '\u2690'
+
+var header = `<!doctype html>
+<html>
+<head>
+<meta charset=UTF-8>
+<title>GDPR Annotated</title>
+<link rel=stylesheet href=styles.css>
+</head>
+<body>
+<header>
+<h1>GDPR Annotated</h1>
+${renderContents()}
+</header>
+`
+
+console.log(header)
+
+function renderContents () {
+  return `
+    <ol class=toc>
+      <li><a href=#recitals>Recitals</a></li>
+      ${gdpr.text.map(nodeContents).join('')}
+      <li><a href=#notes>Notes</a></li>
+    </ol>
+  `
+}
+
+function nodeContents (node, above) {
+  above = Array.isArray(above) ? above : []
+  if (node.title) {
+    if (node.type === 'article') {
+      return `
+        <li>
+          Article ${node.number}.
+          <a href=#article-${node.number}>${escape(node.title)}</a>
+        </li>
+      `
+    } else {
+      var identifier = node.type === 'chapter'
+        ? 'chapter-' + romanize(node.number)
+        : node.type + '-' + node.number
+      var id = above.concat(identifier).join('-')
+      return `
+        <li>
+          ${capitalize(node.type)} ${node.number}.
+          <a href=#${id}>${escape(node.title)}</a>
+          <ol>
+            ${node.text.map(function (element) {
+              return nodeContents(element, above.concat(identifier))
+            }).join('')}
+          </ol>
+        </li>
+      `
+    }
+  }
+}
+
+console.log(`
+<section id=recitals>
+<h1>Recitals</h1>
+<button class=toggle>Show/Hide</button>
+<ol>
+${
+gdpr.recitals
+.map(function (recital, index) {
+  var number = index + 1
+  var id = 'recital-' + number
+  var simple = !recital.text.some(function (element) {
+    return element.hasOwnProperty('text') && Array.isArray(element.text)
+  })
+  if (simple) {
+    return `<li id=${id}><p>${renderText(recital.text)}</p></li>`
+  } else {
+    return `<li id=${id}>` +
+    recital.text.map(function (element) {
+      return '<p>' + renderText(element.text) + '</p>'
+    }).join('') +
+    `</li>`
+  }
+})
+.join('\n')
+}
+</ol>
+</section>
+`)
+
+function renderNote (note) {
+  return `<a href=#note-${note.note}>Note ${note.note}</a>`
+}
+
+function renderEM (em) {
+  return `<em>${escape(em.em)}</em>`
+}
+
+var ORDINALS = [
+  'first',
+  'second',
+  'third',
+  'fourth',
+  'fifth'
+]
+
+function renderReference (reference) {
+  var href
+  var text
+  if (reference.hasOwnProperty('article')) {
+    href = 'article-' + reference.article
+    text = 'Article ' + reference.article
+    if (reference.hasOwnProperty('paragraph')) {
+      href += '-paragraph-' + reference.paragraph
+      text += '(' + reference.paragraph + ')'
+    }
+    if (reference.hasOwnProperty('subparagraph')) {
+      href += '-subparagraph-' + reference.subparagraph
+      text = 'the ' + ORDINALS[reference.subparagraph] + ' subparagraph of ' + text
+    }
+    if (reference.hasOwnProperty('point')) {
+      var parsed = parseInt(reference.point)
+      if (parsed === NaN) {
+        href += '-point-' + String.fromCharCode(96 + reference.point)
+      } else {
+        href += '-point-' + reference.point
+      }
+      text = 'point (' + reference.point + ') of ' + text
+    }
+  } else if (reference.hasOwnProperty('chapter')) {
+    href = 'chapter-' + romanize(reference.chapter)
+    text = 'Chapter ' + romanize(reference.chapter)
+  }
+  var returned = `<a href=#${href}>${escape(reference.text || text)}</a>`
+  if (reference.title) {
+    returned += ' (' + escape(reference.title) + ')'
+  }
+  return returned
+}
+
+function capitalize (string) {
+  return string[0].toUpperCase() + string.slice(1)
+}
+
+console.log(`<main>${gdpr.text.map(renderNode).join('')}</main>`)
+
+function renderNode (node, above) {
+  above = Array.isArray(above) ? above : []
+  var type = node.type
+  if (type === 'chapter') {
+    var identifier = 'chapter-' + romanize(node.number)
+    var id = above.concat(identifier).join('-')
+    return `
+    <section id=${id} class=chapter>
+      <h1>${escape(node.title)}</h1>
+      ${node.text.map(function (element) {
+        return renderNode(element, above.concat(identifier))
+      }).join('')}
+      ${renderTags()}
+    </section>
+    `
+  } else if (type === 'section') {
+    var identifier = 'section-' + node.number
+    var id = above.concat(identifier).join('-')
+    return `
+    <section id=${id} class=section>
+      <h1>${escape(node.title)}</h1>
+      ${node.text.map(function (element) {
+        return renderNode(element, above.concat(identifier))
+      }).join('')}
+      ${renderTags()}
+    </section>
+    `
+  } else if (type === 'paragraph' || type === 'subparagraph') {
+    var text = node.text
+    var identifier = type + '-' + node.number
+    var id = type === 'paragraph'
+      ? above.slice(-1).concat(identifier).join('-')
+      : above.slice(-2).concat(identifier).join('-')
+    return (
+      `<section id=${id} class=${type}>` +
+      renderParagraphText(
+        node.text, type === 'paragraph'
+          ? above.concat(identifier)
+          : above
+      ) +
+      renderTags() +
+      '</section>'
+    )
+  } else if (type === 'article') {
+    var id = 'article-' + node.number
+    return `
+    <section id=${id} class=article>
+      <h1>${escape(node.title)}</h1>
+      ${node.text.map(function (element) {
+        return renderNode(element, above.concat(id))
+      }).join('')}
+      ${renderTags()}
+    </section>
+    `
+  } else if (type === 'preamble') {
+    return `<p class=preamble>${renderText(node.text)}</p>`
+  } else if (type === 'point') {
+    var identifier = 'point-' + node.number
+    var id = above.slice(-2).concat(identifier).join('-')
+    return `
+      <li class=point id=${id}>
+        <p>${renderText(node.text)}</p>
+        ${renderTags()}
+      </li>
+    `
+  }
+
+  function renderTags () {
+    if (!Array.isArray(node.tags)) return ''
+    return `
+      <ul class=tags>
+        ${node.tags.sort().map(function (tag) {
+          return `
+          <li>
+          ${WHITE_FLAG} <a href="#tag:${termToID(tag)}">${escape(tag)}</a>
+          </li>
+          `
+        }).join('')}
+      </ul>
+    `
+  }
+}
+
+function renderParagraphText (text, above) {
+  return text.map(function (element, index) {
+    var returned
+    if (element.hasOwnProperty('type')) {
+      returned = renderNode(element, above)
+      if (element.type === 'point') {
+        var previous = text[index - 1]
+        if (!previous || previous.type !== 'point') {
+          returned = '<ol>' + returned
+        }
+        var next = text[index + 1]
+        if (index === text.length - 1 || (next && next.type !== 'point')) {
+          returned = returned + '</ol>'
+        }
+      }
+    } else {
+      returned = renderText([element])
+    }
+    return returned
+  }).join('')
+}
+
+console.log(`
+<section id=notes>
+<h1>Notes</h1>
+<ol>
+${
+gdpr.notes
+.map(function (note) {
+  var number = note.number
+  var text = note.text
+  var id = 'note-' + number
+  if (typeof text === 'string') {
+    return `<li id=${id}><p>${escape(text)}</p></li>`
+  } else {
+    return `<li id=${id}><p>` + renderText(text) + '</p></li>'
+  }
+})
+.join('\n')
+}
+</ol>
+</section>
+`)
+
+var tagIndex = {}
+
+function findTags (node, above) {
+  above = Array.isArray(above) ? above : []
+  var here = above
+    .concat({key: node.type, value: node.number})
+  if (node.title) {
+    here.push({key: 'title', value: node.title})
+  }
+  if (Array.isArray(node.tags)) {
+    node.tags.forEach(function (tag) {
+      if (tagIndex[tag]) add(tagIndex[tag], here)
+      else tagIndex[tag] = [here]
+    })
+  }
+  if (Array.isArray(node.text)) node.text.forEach(function (element) {
+    findTags(element, here)
+  })
+}
+
+gdpr.text.forEach(findTags)
+
+console.log(`
+<section id=tags>
+<h1>Index</h1>
+<dl>
+${Object.keys(tagIndex).sort().map(function (tag) {
+  var links = tagIndex[tag]
+  return `
+  <dt id="tag:${termToID(tag)}">${WHITE_FLAG} ${escape(tag)}</dt>
+  <dd>
+    <ul>
+      ${links.map(function (link) {
+        var reference = link
+          .reduce(function (reference, element) {
+            reference[element.key] = element.value
+            return reference
+          }, {})
+        if (reference.hasOwnProperty('article')) {
+          delete reference.chapter
+          delete reference.section
+        }
+        return `<li>${renderReference(reference)}</li>`
+      }).join('')}
+    </ul>
+  </dd>
+  `
+}).join('')}
+</dl>
+</section>
+`)
+
+function renderText (text) {
+  return text.map(function (element) {
+    if (typeof element === 'string') {
+      return escape(element)
+    } else if (element.hasOwnProperty('note')) {
+      return renderNote(element)
+    } else if (element.hasOwnProperty('em')) {
+      return renderEM(element)
+    } else if (
+      element.hasOwnProperty('chapter') ||
+      element.hasOwnProperty('article')
+    ) {
+      return renderReference(element)
+    } else if (element.hasOwnProperty('term')) {
+      return renderTerm(element)
+    } else if (element.hasOwnProperty('concept')) {
+      return renderConcept(element)
+    } else if (element.hasOwnProperty('definition')) {
+      return renderDefinition(element)
+    }
+  }).join('')
+}
+
+var termIndex = {}
+
+function findDefinitions (node, above) {
+  above = Array.isArray(above) ? above : []
+  var here = above
+    .concat({key: node.type, value: node.number})
+  if (node.title) {
+    here.push({key: 'title', value: node.title})
+  }
+  if (node.hasOwnProperty('definition')) {
+    var term = node.definition
+    termIndex[node.definition] = here
+  }
+  if (Array.isArray(node.text)) node.text.forEach(function (element) {
+    findDefinitions(element, here)
+  })
+}
+
+gdpr.text.forEach(findDefinitions)
+
+console.log(`
+<section id=terms>
+<h1>Terms</h1>
+<dl>
+${Object.keys(termIndex).sort().map(function (term) {
+  var link = termIndex[term]
+  var reference = link
+    .reduce(function (reference, element) {
+      reference[element.key] = element.value
+      return reference
+    }, {})
+  if (reference.hasOwnProperty('article')) {
+    delete reference.chapter
+    delete reference.section
+  }
+  return `
+  <dt>${renderTerm({term: term})}</dt>
+  <dd>${renderReference(reference)}</dd>
+  `
+}).join('')}
+</dl>
+</section>
+`)
+
+var conceptIndex = {}
+
+function findConcepts (node, above) {
+  above = Array.isArray(above) ? above : []
+  var here = above
+    .concat({key: node.type, value: node.number})
+  if (node.title) {
+    here.push({key: 'title', value: node.title})
+  }
+  if (node.hasOwnProperty('concept')) {
+    var concept = node.concept
+    if (conceptIndex[concept]) add(conceptIndex[concept], here)
+    else conceptIndex[concept] = [here]
+  }
+  if (Array.isArray(node.text)) node.text.forEach(function (element) {
+    findConcepts(element, here)
+  })
+}
+
+function add (set, item) {
+  if (set.some(function (element) {
+    return deepEqual(element, item)
+  })) return
+  set.push(item)
+}
+
+gdpr.text.forEach(findConcepts)
+
+console.log(`
+<section id=concepts>
+<h1>Concepts</h1>
+<dl>
+${Object.keys(conceptIndex).sort().map(function (concept) {
+  var links = conceptIndex[concept]
+  return `
+  <dt id="concept:${termToID(concept)}">${escape(concept)}</dt>
+  <dd>
+    <ul>
+      ${links.map(function (link) {
+        var reference = link
+          .reduce(function (reference, element) {
+            reference[element.key] = element.value
+            return reference
+          }, {})
+        if (reference.hasOwnProperty('article')) {
+          delete reference.chapter
+          delete reference.section
+        }
+        return `<li>${renderReference(reference)}</li>`
+      }).join('')}
+    </ul>
+  </dd>
+  `
+}).join('')}
+</dl>
+</section>
+`)
+
+function renderTerm (term) {
+  return `<a class=defined href="#definition:${termToID(term.term)}">${escape(term.text || term.term)}</a>`
+}
+
+function renderConcept (concept) {
+  return `<a class=concept href="#concept:${termToID(concept.concept)}">${escape(concept.text || concept.concept)}</a>`
+}
+
+function renderDefinition (arg) {
+  var term = arg.definition
+  return `<a class=definition id="definition:${termToID(term)}">'${escape(arg.text || term)}'</a>`
+}
+
+function termToID (term) {
+  return encodeURIComponent(term.replace(/ /g, '_'))
+}
+
+var footer = `<script src=script.js></script></body></html>`
+console.log(footer)

@@ -1,0 +1,113 @@
+body {
+  line-height: 140%;
+  max-width: 30rem;
+  margin: 0 auto;
+}
+
+.toc li {
+  list-style-type: none;
+}
+
+.toc ol {
+  padding-left: 1rem;
+}
+
+.chapter {
+  counter-increment: chapter;
+  counter-reset: section;
+}
+
+.chapter h1:before {
+  content: "Chapter " counter(chapter) ". ";
+}
+
+.section {
+  counter-increment: section;
+}
+
+.section h1:before {
+  content: "Section " counter(section) ". ";
+}
+
+main {
+  counter-reset: article;
+}
+
+.article {
+  counter-increment: article;
+  counter-reset: paragraph;
+}
+
+.article h1:before {
+  content: "Article " counter(article) ". ";
+}
+
+.article ol {
+  list-style-type: lower-alpha;
+}
+
+.paragraph {
+  counter-increment: paragraph;
+  counter-reset: subparagraph;
+}
+
+.paragraph:before {
+  content: "¶" counter(paragraph) ": ";
+}
+
+.subparagraph {
+  counter-increment: subparagraph;
+}
+
+.subparagraph:before {
+  content: "sub " counter(subparagraph) ": ";
+}
+
+.hidden {
+  display: none;
+}
+
+.defined {
+  font-style: oblique;
+}
+
+.definition {
+  font-weight: bold;
+}
+
+.tags {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tags li {
+  display: inline;
+  padding-right: 0.5rem;
+}
+
+.paragraph, .subparagraph {
+  padding: 0.5rem 0;
+  margin-left: 1rem;
+}
+
+.point {
+  padding: 0.5rem 0;
+  margin-left: 1rem;
+}
+
+ol {
+  margin: 0;
+}
+
+li p {
+  margin-top: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

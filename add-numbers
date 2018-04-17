@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+var raw = require('./gdpr.raw.json')
+
+function recurse (node, index) {
+  if (node.type === 'paragraph' || node.type === 'subparagraph') {
+    node.number = index + 1
+  } else if (node.type === 'point') {
+    node.number = String.fromCharCode(96 + index)
+  }
+  if (Array.isArray(node.text)) node.text.forEach(recurse)
+}
+
+raw.text.forEach(recurse)
+
+console.log(JSON.stringify(raw, null, 2))

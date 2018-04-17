@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "devDependencies": {
+    "deep-equal": "^1.0.1",
+    "escape-html": "^1.0.3",
+    "lamos-to-json": "^3.0.2",
+    "romanize": "^1.1.1"
+  }
+}
