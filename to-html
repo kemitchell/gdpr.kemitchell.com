@@ -161,6 +161,7 @@ function renderNode (node, above) {
       }).join('')}
       ${renderTags()}
       ${renderRecitalLinks()}
+      ${renderOpinions()}
     </section>
     `
   } else if (type === 'section') {
@@ -174,6 +175,7 @@ function renderNode (node, above) {
       }).join('')}
       ${renderTags()}
       ${renderRecitalLinks()}
+      ${renderOpinions()}
     </section>
     `
   } else if (type === 'paragraph' || type === 'subparagraph') {
@@ -191,6 +193,7 @@ function renderNode (node, above) {
       ) +
       renderTags() +
       renderRecitalLinks() +
+      renderOpinions() +
       '</section>'
     )
   } else if (type === 'article') {
@@ -203,6 +206,7 @@ function renderNode (node, above) {
       }).join('')}
       ${renderTags()}
       ${renderRecitalLinks()}
+      ${renderOpinions()}
     </section>
     `
   } else if (type === 'preamble') {
@@ -215,6 +219,7 @@ function renderNode (node, above) {
         <p>${renderText(node.text)}</p>
         ${renderTags()}
         ${renderRecitalLinks()}
+        ${renderOpinions()}
       </li>
     `
   }
@@ -233,6 +238,7 @@ function renderNode (node, above) {
       </ul>
     `
   }
+
   function renderRecitalLinks () {
     if (!Array.isArray(node.recitals)) return ''
     return `
@@ -241,6 +247,21 @@ function renderNode (node, above) {
           return `
           <li>
             <a href="#recital-${recital}">Recital ${recital}</a>
+          </li>
+          `
+        }).join('')}
+      </ul>
+    `
+  }
+
+  function renderOpinions () {
+    if (!Array.isArray(node.opinions)) return ''
+    return `
+      <ul class=recitalLinks>
+        ${node.opinions.sort().map(function (opinion) {
+          return `
+          <li>
+            <a href="/working-party/wp${opinion}.pdf">WP${opinion}</a>
           </li>
           `
         }).join('')}
