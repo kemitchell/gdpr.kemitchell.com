@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 var raw = require('./gdpr.raw.json')
 
-function recurse (node, index) {
+function recurse (node, index, siblings) {
   if (node.type === 'paragraph' || node.type === 'subparagraph') {
     node.number = index + 1
   } else if (node.type === 'point') {
-    node.number = String.fromCharCode(96 + index)
+    var priorSibling = siblings[index - 1]
+    if (priorSibling) {
+      if (priorSibling.type !== 'point') {
+        node.number = 'a'
+      } else {
+        node.number = String.fromCharCode(priorSibling.number.charCodeAt(0) + 1)
+      }
+    }
   }
   if (Array.isArray(node.text)) node.text.forEach(recurse)
 }
