@@ -1151,6 +1151,8 @@ text:
         title: Lawfulness of processing
         tags:
           - lawfulness
+        opinions:
+          - 259
         text:
 
           - type: paragraph
@@ -1399,6 +1401,8 @@ text:
         title: Conditions for consent
         tags:
           - consent
+        opinions:
+          - 259
         text:
 
           - type: paragraph
@@ -1844,6 +1848,8 @@ text:
           - type: article
             number: 12
             title: Transparent information, communication and modalities for the exercise of the rights of the data subject
+            opinions:
+              - 260
             text:
 
               - type: paragraph
@@ -2074,6 +2080,8 @@ text:
           - type: article
             number: 13
             title: Information to be provided where personal data are collected from the data subject
+            opinions:
+              - 260
             text:
 
               - type: paragraph
@@ -2353,6 +2361,8 @@ text:
           - type: article
             number: 14
             title: Information to be provided where personal data have not been obtained from the data subject
+            opinions:
+              - 260
             text:
 
               - type: paragraph
@@ -3341,6 +3351,8 @@ text:
           - type: article
             number: 22
             title: Automated individual decision-making, including profiling
+            opinions:
+              - 251
             text:
 
               - type: paragraph
