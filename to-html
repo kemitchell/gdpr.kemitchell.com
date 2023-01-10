@@ -82,7 +82,7 @@ gdpr.recitals
     recital.text.map(function (element) {
       return '<p>' + renderText(element.text) + '</p>'
     }).join('') +
-    `</li>`
+    '</li>'
   }
 })
 .join('\n')
@@ -136,7 +136,7 @@ function renderReference (reference) {
   }
   let returned = `<a href=#${href}>${escape(reference.text || text)}</a>`
   if (reference.title) {
-    returned += ' (' + escape(reference.title) + ')'
+    returned += '&nbsp;(' + escape(reference.title) + ')'
   }
   return returned
 }
@@ -223,11 +223,7 @@ function renderNode (node, above) {
     return `
       <ul class=tags>
         ${node.tags.sort().map(function (tag) {
-          return `
-          <li>
-          ${WHITE_FLAG} <a href="#tag:${termToID(tag)}">${escape(tag)}</a>
-          </li>
-          `
+          return `<li>${WHITE_FLAG}&nbsp;<a href="#tag:${termToID(tag)}">${escape(tag)}</a></li>`
         }).join('')}
       </ul>
     `
@@ -323,7 +319,7 @@ console.log(`
 ${Object.keys(tagIndex).sort().map(function (tag) {
   const links = tagIndex[tag]
   return `
-  <dt id="tag:${termToID(tag)}">${WHITE_FLAG} ${escape(tag)}</dt>
+  <dt id="tag:${termToID(tag)}">${WHITE_FLAG}&nbsp;${escape(tag)}</dt>
   <dd>
     <ul>
       ${links.map(function (link) {
