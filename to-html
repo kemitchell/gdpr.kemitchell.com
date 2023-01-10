@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-var deepEqual = require('deep-equal')
-var escape = require('escape-html')
-var gdpr = require('./gdpr')
-var romanize = require('romanize')
+const deepEqual = require('deep-equal')
+const escape = require('escape-html')
+const gdpr = require('./gdpr')
+const romanize = require('romanize')
 
-var WHITE_FLAG = '\u2690'
+const WHITE_FLAG = '\u2690'
 
-var header = `<!doctype html>
+const header = `<!doctype html>
 <html>
 <head>
 <meta charset=UTF-8>
@@ -43,10 +43,10 @@ function nodeContents (node, above) {
         </li>
       `
     } else {
-      var identifier = node.type === 'chapter'
+      const identifier = node.type === 'chapter'
         ? 'chapter-' + romanize(node.number)
         : node.type + '-' + node.number
-      var id = above.concat(identifier).join('-')
+      const id = above.concat(identifier).join('-')
       return `
         <li>
           ${capitalize(node.type)} ${node.number}.
@@ -70,10 +70,10 @@ console.log(`
 ${
 gdpr.recitals
 .map(function (recital, index) {
-  var number = index + 1
-  var id = 'recital-' + number
-  var simple = !recital.text.some(function (element) {
-    return element.hasOwnProperty('text') && Array.isArray(element.text)
+  const number = index + 1
+  const id = 'recital-' + number
+  const simple = !recital.text.some(function (element) {
+    return element.text && Array.isArray(element.text)
   })
   if (simple) {
     return `<li id=${id}><p>${renderText(recital.text)}</p></li>`
@@ -99,7 +99,7 @@ function renderEM (em) {
   return `<em>${escape(em.em)}</em>`
 }
 
-var ORDINALS = [
+const ORDINALS = [
   'first',
   'second',
   'third',
@@ -108,33 +108,33 @@ var ORDINALS = [
 ]
 
 function renderReference (reference) {
-  var href
-  var text
-  if (reference.hasOwnProperty('article')) {
+  let href
+  let text
+  if (reference.article) {
     href = 'article-' + reference.article
     text = 'Article ' + reference.article
-    if (reference.hasOwnProperty('paragraph')) {
+    if (reference.paragraph) {
       href += '-paragraph-' + reference.paragraph
       text += '(' + reference.paragraph + ')'
     }
-    if (reference.hasOwnProperty('subparagraph')) {
+    if (reference.subparagraph) {
       href += '-subparagraph-' + reference.subparagraph
       text = 'the ' + ORDINALS[reference.subparagraph] + ' subparagraph of ' + text
     }
-    if (reference.hasOwnProperty('point')) {
-      var parsed = parseInt(reference.point)
-      if (parsed === NaN) {
+    if (reference.point) {
+      const parsed = parseInt(reference.point)
+      if (isNaN(parsed)) {
         href += '-point-' + String.fromCharCode(96 + reference.point)
       } else {
         href += '-point-' + reference.point
       }
       text = 'point (' + reference.point + ') of ' + text
     }
-  } else if (reference.hasOwnProperty('chapter')) {
+  } else if (reference.chapter) {
     href = 'chapter-' + romanize(reference.chapter)
     text = 'Chapter ' + romanize(reference.chapter)
   }
-  var returned = `<a href=#${href}>${escape(reference.text || text)}</a>`
+  let returned = `<a href=#${href}>${escape(reference.text || text)}</a>`
   if (reference.title) {
     returned += ' (' + escape(reference.title) + ')'
   }
@@ -149,10 +149,10 @@ console.log(`<main>${gdpr.text.map(renderNode).join('')}</main>`)
 
 function renderNode (node, above) {
   above = Array.isArray(above) ? above : []
-  var type = node.type
+  const type = node.type
   if (type === 'chapter') {
-    var identifier = 'chapter-' + romanize(node.number)
-    var id = above.concat(identifier).join('-')
+    const identifier = 'chapter-' + romanize(node.number)
+    const id = above.concat(identifier).join('-')
     return `
     <section id=${id} class=chapter>
       <h1>${escape(node.title)}</h1>
@@ -164,8 +164,8 @@ function renderNode (node, above) {
     </section>
     `
   } else if (type === 'section') {
-    var identifier = 'section-' + node.number
-    var id = above.concat(identifier).join('-')
+    const identifier = 'section-' + node.number
+    const id = above.concat(identifier).join('-')
     return `
     <section id=${id} class=section>
       <h1>${escape(node.title)}</h1>
@@ -177,9 +177,8 @@ function renderNode (node, above) {
     </section>
     `
   } else if (type === 'paragraph' || type === 'subparagraph') {
-    var text = node.text
-    var identifier = type + '-' + node.number
-    var id = type === 'paragraph'
+    const identifier = type + '-' + node.number
+    const id = type === 'paragraph'
       ? above.slice(-1).concat(identifier).join('-')
       : above.slice(-2).concat(identifier).join('-')
     return (
@@ -194,7 +193,7 @@ function renderNode (node, above) {
       '</section>'
     )
   } else if (type === 'article') {
-    var id = 'article-' + node.number
+    const id = 'article-' + node.number
     return `
     <section id=${id} class=article>
       <h1>${escape(node.title)}</h1>
@@ -208,8 +207,8 @@ function renderNode (node, above) {
   } else if (type === 'preamble') {
     return `<p class=preamble>${renderText(node.text)}</p>`
   } else if (type === 'point') {
-    var identifier = 'point-' + node.number
-    var id = above.slice(-2).concat(identifier).join('-')
+    const identifier = 'point-' + node.number
+    const id = above.slice(-2).concat(identifier).join('-')
     return `
       <li class=point id=${id}>
         <p>${renderText(node.text)}</p>
@@ -251,15 +250,15 @@ function renderNode (node, above) {
 
 function renderParagraphText (text, above) {
   return text.map(function (element, index) {
-    var returned
-    if (element.hasOwnProperty('type')) {
+    let returned
+    if (element.type) {
       returned = renderNode(element, above)
       if (element.type === 'point') {
-        var previous = text[index - 1]
+        const previous = text[index - 1]
         if (!previous || previous.type !== 'point') {
           returned = '<ol>' + returned
         }
-        var next = text[index + 1]
+        const next = text[index + 1]
         if (index === text.length - 1 || (next && next.type !== 'point')) {
           returned = returned + '</ol>'
         }
@@ -278,9 +277,9 @@ console.log(`
 ${
 gdpr.notes
 .map(function (note) {
-  var number = note.number
-  var text = note.text
-  var id = 'note-' + number
+  const number = note.number
+  const text = note.text
+  const id = 'note-' + number
   if (typeof text === 'string') {
     return `<li id=${id}><p>${escape(text)}</p></li>`
   } else {
@@ -293,14 +292,14 @@ gdpr.notes
 </section>
 `)
 
-var tagIndex = {}
+const tagIndex = {}
 
 function findTags (node, above) {
   above = Array.isArray(above) ? above : []
-  var here = above
-    .concat({key: node.type, value: node.number})
+  const here = above
+    .concat({ key: node.type, value: node.number })
   if (node.title) {
-    here.push({key: 'title', value: node.title})
+    here.push({ key: 'title', value: node.title })
   }
   if (Array.isArray(node.tags)) {
     node.tags.forEach(function (tag) {
@@ -308,9 +307,11 @@ function findTags (node, above) {
       else tagIndex[tag] = [here]
     })
   }
-  if (Array.isArray(node.text)) node.text.forEach(function (element) {
-    findTags(element, here)
-  })
+  if (Array.isArray(node.text)) {
+    node.text.forEach(function (element) {
+      findTags(element, here)
+    })
+  }
 }
 
 gdpr.text.forEach(findTags)
@@ -320,18 +321,18 @@ console.log(`
 <h1>Index</h1>
 <dl>
 ${Object.keys(tagIndex).sort().map(function (tag) {
-  var links = tagIndex[tag]
+  const links = tagIndex[tag]
   return `
   <dt id="tag:${termToID(tag)}">${WHITE_FLAG} ${escape(tag)}</dt>
   <dd>
     <ul>
       ${links.map(function (link) {
-        var reference = link
+        const reference = link
           .reduce(function (reference, element) {
             reference[element.key] = element.value
             return reference
           }, {})
-        if (reference.hasOwnProperty('article')) {
+        if (reference.article) {
           delete reference.chapter
           delete reference.section
         }
@@ -346,44 +347,47 @@ ${Object.keys(tagIndex).sort().map(function (tag) {
 `)
 
 function renderText (text) {
-  return text.map(function (element) {
+  return text.map(element => {
     if (typeof element === 'string') {
       return escape(element)
-    } else if (element.hasOwnProperty('note')) {
+    } else if (element.note) {
       return renderNote(element)
-    } else if (element.hasOwnProperty('em')) {
+    } else if (element.em) {
       return renderEM(element)
     } else if (
-      element.hasOwnProperty('chapter') ||
-      element.hasOwnProperty('article')
+      element.chapter ||
+      element.article
     ) {
       return renderReference(element)
-    } else if (element.hasOwnProperty('term')) {
+    } else if (element.term) {
       return renderTerm(element)
-    } else if (element.hasOwnProperty('concept')) {
+    } else if (element.concept) {
       return renderConcept(element)
-    } else if (element.hasOwnProperty('definition')) {
+    } else if (element.definition) {
       return renderDefinition(element)
+    } else {
+      return ''
     }
   }).join('')
 }
 
-var termIndex = {}
+const termIndex = {}
 
 function findDefinitions (node, above) {
   above = Array.isArray(above) ? above : []
-  var here = above
-    .concat({key: node.type, value: node.number})
+  const here = above
+    .concat({ key: node.type, value: node.number })
   if (node.title) {
-    here.push({key: 'title', value: node.title})
+    here.push({ key: 'title', value: node.title })
   }
-  if (node.hasOwnProperty('definition')) {
-    var term = node.definition
+  if (node.definition) {
     termIndex[node.definition] = here
   }
-  if (Array.isArray(node.text)) node.text.forEach(function (element) {
-    findDefinitions(element, here)
-  })
+  if (Array.isArray(node.text)) {
+    node.text.forEach(function (element) {
+      findDefinitions(element, here)
+    })
+  }
 }
 
 gdpr.text.forEach(findDefinitions)
@@ -393,18 +397,18 @@ console.log(`
 <h1>Terms</h1>
 <dl>
 ${Object.keys(termIndex).sort().map(function (term) {
-  var link = termIndex[term]
-  var reference = link
+  const link = termIndex[term]
+  const reference = link
     .reduce(function (reference, element) {
       reference[element.key] = element.value
       return reference
     }, {})
-  if (reference.hasOwnProperty('article')) {
+  if (reference.article) {
     delete reference.chapter
     delete reference.section
   }
   return `
-  <dt>${renderTerm({term: term})}</dt>
+  <dt>${renderTerm({ term })}</dt>
   <dd>${renderReference(reference)}</dd>
   `
 }).join('')}
@@ -412,23 +416,25 @@ ${Object.keys(termIndex).sort().map(function (term) {
 </section>
 `)
 
-var conceptIndex = {}
+const conceptIndex = {}
 
 function findConcepts (node, above) {
   above = Array.isArray(above) ? above : []
-  var here = above
-    .concat({key: node.type, value: node.number})
+  const here = above
+    .concat({ key: node.type, value: node.number })
   if (node.title) {
-    here.push({key: 'title', value: node.title})
+    here.push({ key: 'title', value: node.title })
   }
-  if (node.hasOwnProperty('concept')) {
-    var concept = node.concept
+  if (node.concept) {
+    const concept = node.concept
     if (conceptIndex[concept]) add(conceptIndex[concept], here)
     else conceptIndex[concept] = [here]
   }
-  if (Array.isArray(node.text)) node.text.forEach(function (element) {
-    findConcepts(element, here)
-  })
+  if (Array.isArray(node.text)) {
+    node.text.forEach(function (element) {
+      findConcepts(element, here)
+    })
+  }
 }
 
 function add (set, item) {
@@ -445,18 +451,18 @@ console.log(`
 <h1>Concepts</h1>
 <dl>
 ${Object.keys(conceptIndex).sort().map(function (concept) {
-  var links = conceptIndex[concept]
+  const links = conceptIndex[concept]
   return `
   <dt id="concept:${termToID(concept)}">${escape(concept)}</dt>
   <dd>
     <ul>
       ${links.map(function (link) {
-        var reference = link
+        const reference = link
           .reduce(function (reference, element) {
             reference[element.key] = element.value
             return reference
           }, {})
-        if (reference.hasOwnProperty('article')) {
+        if (reference.article) {
           delete reference.chapter
           delete reference.section
         }
@@ -479,7 +485,7 @@ function renderConcept (concept) {
 }
 
 function renderDefinition (arg) {
-  var term = arg.definition
+  const term = arg.definition
   return `<a class=definition id="definition:${termToID(term)}">'${escape(arg.text || term)}'</a>`
 }
 
@@ -487,5 +493,5 @@ function termToID (term) {
   return encodeURIComponent(term.replace(/ /g, '_'))
 }
 
-var footer = `<script src=script.js></script></body></html>`
+const footer = '<script src=script.js></script></body></html>'
 console.log(footer)
