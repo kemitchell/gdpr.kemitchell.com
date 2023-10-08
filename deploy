@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 make
-rsync  --archive --compress --force --delete --progress --exclude '.git' --exclude publish site/ kyle@kemitchell.com:/var/www/gdpr.kemitchell.com/
+rsync  --archive --compress --force --delete --progress --exclude '.git' --exclude publish site/ gdpr.kemitchell.com:/var/www/gdpr.kemitchell.com/
