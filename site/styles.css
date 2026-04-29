@@ -2,6 +2,7 @@ body {
   line-height: 140%;
   max-width: 30rem;
   margin: 0 auto;
+  font-family: sans-serif;
 }
 
 .toc li {
